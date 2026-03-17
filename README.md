@@ -1,5 +1,16 @@
-# aws-secure-vpc-terraform
-Secure, multi-environment AWS VPC architecture built with Terraform
+# 🚀 AWS Secure Multi-Environment VPC (Terraform)
+
+Production-grade AWS networking infrastructure built using Terraform, featuring isolated dev, staging, and production environments with secure VPC architecture, remote state management, and CloudWatch monitoring.
+
+---
+
+## 🏗️ Architecture Diagram
+
+![Architecture](docs/architecture.png)
+
+---
+
+## 📌 Project Overview
 
 This repository demonstrates a production-grade AWS networking foundation using Terraform Infrastructure as Code (IaC). It implements isolated dev, staging, and prod environments, each with its own VPC, subnets, NAT gateway, and remote state management.
 
