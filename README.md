@@ -1,8 +1,35 @@
-# 🚀 AWS Secure Multi-Environment VPC (Terraform)
+🚀 AWS Secure Multi-Environment VPC (Terraform)
 
-Production-grade AWS networking infrastructure built using Terraform, featuring isolated dev, staging, and production environments with secure VPC architecture, remote state management, and CloudWatch monitoring.
+Production-grade, secure AWS networking infrastructure built using Terraform.
+Implements fully isolated dev, staging, and production environments with secure VPC design, remote state management, and CloudWatch monitoring.
 
----
+🔥 Key Features
+
+Multi-environment architecture (dev / staging / prod)
+
+Secure VPC with public & private subnets
+
+Remote Terraform state (S3 + DynamoDB locking)
+
+Modular, reusable Terraform design
+
+CloudWatch monitoring & alerting
+
+High availability across multiple Availability Zones
+
+Security-first architecture design
+
+🎯 What This Project Demonstrates
+
+Designing secure AWS network architectures
+
+Building reusable Terraform modules
+
+Managing infrastructure across multiple environments
+
+Implementing remote state and team-safe workflows
+
+Monitoring systems using CloudWatch
 
 ## 🏗️ Architecture Diagram
 
@@ -12,139 +39,142 @@ Production-grade AWS networking infrastructure built using Terraform, featuring 
 
 ## 📌 Project Overview
 
-This repository demonstrates a production-grade AWS networking foundation using Terraform Infrastructure as Code (IaC). It implements isolated dev, staging, and prod environments, each with its own VPC, subnets, NAT gateway, and remote state management.
+Each environment (dev, staging, prod) includes:
 
-The project follows real-world cloud engineering best practices: modular Terraform design, remote state with locking, environment separation, and security-first defaults.
+Dedicated VPC
 
-Architecture Overview
-Each environment (dev, staging, prod) deploys:
-A dedicated AWS VPC
-Public subnets (for internet-facing resources)
-Private subnets (for internal workloads)
+Public subnets (internet-facing resources)
+
+Private subnets (internal workloads)
+
 Internet Gateway
-NAT Gateway (single NAT for cost optimization)
-Route tables and subnet associations
-Environment-specific tagging
-Terraform state is stored remotely in S3 with DynamoDB state locking to support team workflows and prevent concurrent changes.
 
-Repository Structure
+NAT Gateway (cost-optimized)
+
+Route tables and subnet associations
+
+Remote state stored in S3 with DynamoDB locking
+
+🗂️ Repository Structure
 aws-secure-vpc-terraform/
-│
 ├── backend/
-│   └── bootstrap/          # Creates S3 + DynamoDB for remote state
-│
+│   └── bootstrap/        # Creates S3 + DynamoDB for remote state
 ├── modules/
-│   └── vpc/                # Reusable VPC Terraform module
-│
+│   └── vpc/              # Reusable VPC Terraform module
 ├── environments/
 │   ├── dev/
 │   ├── staging/
-│   └── prod/               # Environment-specific configurations
-│
-├── docs/                   # (Reserved for diagrams & documentation)
+│   └── prod/             # Environment-specific configs
+├── docs/
+│   ├── architecture.png
+│   └── screenshots/
+│       └── ops-dashboard.png
 └── README.md
+🌍 Environments
+EnvironmentCIDR BlockPurpose
+dev	10.10.0.0/16	Development & testing
+staging	10.20.0.0/16	Pre-production
+prod	10.30.0.0/16	Production
+🔐 Remote State & Locking
 
+Terraform state is stored remotely using:
 
-Environments
-Each environment is fully isolated and uses its own remote state file.
+Amazon S3 — state storage
 
-| Environment | CIDR Block   | Purpose               |
-| ----------- | ------------ | --------------------- |
-| dev         | 10.10.0.0/16 | Development & testing |
-| staging     | 10.20.0.0/16 | Pre-production        |
-| prod        | 10.30.0.0/16 | Production            |
+Amazon DynamoDB — state locking
 
-Remote State & Locking
-Remote state is configured using:
-Amazon S3 — Terraform state storage
-Amazon DynamoDB — state locking & concurrency control
 This prevents:
-State corruption
-Accidental concurrent applies
-Local state drift
-Each environment uses a unique state key, ensuring complete separation.
 
-How to Deploy
-1️. Bootstrap remote state (one time)
+State corruption
+
+Concurrent deployments
+
+Local state drift
+
+⚙️ Deployment
+1️⃣ Bootstrap remote state (one-time)
 cd backend/bootstrap
 terraform init
 terraform apply
-
-2️. Deploy an environment (example: dev)
+2️⃣ Deploy environment (example: dev)
 cd environments/dev
 terraform init
 terraform plan
 terraform apply
-Repeat for staging and prod.
+📊 Monitoring (CloudWatch)
 
-Outputs
-Each environment exports useful outputs:
-vpc_id
-public_subnet_ids
-private_subnet_ids
+The project includes a CloudWatch dashboard with:
 
-Example:
-terraform output
-These outputs can be consumed by downstream modules (EC2, EKS, RDS, etc.).
+ASG CPU utilization
 
-Security Considerations
-No inbound SSH access by default
-Private subnets route outbound traffic via NAT
-State locking prevents unsafe concurrent changes
-Strict tagging for environment and ownership
-Designed to support SSM-only EC2 access (future enhancement)
+ALB request count
 
-Design Decisions
-Single NAT Gateway per environment to balance cost and availability
-Module-based design for reuse and maintainability
-Environment isolation instead of workspaces for clearer blast radius
-Remote state from day one (non-negotiable in real teams)
+Target response time
 
+4XX / 5XX error metrics
 
-Roadmap (Planned Enhancements)
-SSM-only EC2 instances (no SSH)
-VPC Interface Endpoints (SSM, EC2Messages)
-Architecture diagram
-CI/CD validation with terraform fmt and terraform validate
+Health checks
 
-Tools Used
-Terraform
-AWS (VPC, EC2, S3, DynamoDB)
-AWS CLI
-Visual Studio Code
-
-👤 Author
-Richard Addae
-Cloud & Security Engineering Focus
-Terraform • AWS • Infrastructure as Code
-
-## Operations (CloudWatch)
-
-After deployment, Terraform creates an operations dashboard and exposes it as an output:
-
-- `ops_dashboard_name` = **aws-secure-vpc-terraform-dev-ops-dashboard**
-
-Open it in AWS Console:
-CloudWatch → Dashboards → **aws-secure-vpc-terraform-dev-ops-dashboard**
-
-### Monitoring coverage
-This dashboard includes:
-- ASG CPU utilization
-- ASG desired vs in-service capacity
-- ALB request count
-- ALB target response time
-- ALB 4XX/5XX (ELB + Target)
-- ALB healthy vs unhealthy hosts
-- Alarm status widget (alarms tied directly to the dashboard)
+Alarm status tracking
 
 ### Screenshot
 ![Operations Dashboard](docs/screenshots/ops-dashboard.png)
 
-## Quick Test
+🧪 Quick Test
 
-After `terraform apply`, open the ALB URL in your browser:
+After deployment:
 
-- `alb_dns_name` output → `http://<alb_dns_name>`
+terraform output alb_dns_name
 
-Expected response from the EC2 instances:
-`OK: aws-secure-vpc-terraform-dev`
+Open in browser:
+
+http://<alb_dns_name>
+
+Expected response:
+
+OK: aws-secure-vpc-terraform-dev
+🔐 Security Considerations
+
+No direct SSH access
+
+Private subnets for application workloads
+
+Controlled outbound access via NAT Gateway
+
+Remote state locking for safe deployments
+
+Environment isolation to reduce blast radius
+
+🧠 Design Decisions
+
+Single NAT Gateway per environment (cost optimization)
+
+Modular Terraform design for reuse
+
+Separate environments instead of workspaces (clear isolation)
+
+Remote state implemented from the start
+
+🚀 Roadmap
+
+SSM-only EC2 access (no SSH)
+
+VPC Interface Endpoints (SSM, EC2Messages)
+
+CI/CD pipeline (GitHub Actions)
+
+Terraform validation (fmt, validate)
+
+🛠️ Tech Stack
+
+AWS (VPC, EC2, ALB, S3, DynamoDB, CloudWatch)
+
+Terraform
+
+AWS CLI
+
+👤 Author
+
+Richard Addae
+Cloud & Security Engineering Focus
+Terraform • AWS • Infrastructure as Code
