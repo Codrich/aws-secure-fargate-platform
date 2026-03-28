@@ -1,199 +1,240 @@
-🚀 AWS Secure Multi-Environment VPC (Terraform)
+# 🚀 Secure AWS ECS Fargate Platform
 
-Production-grade, secure AWS networking infrastructure built using Terraform.
-Implements fully isolated dev, staging, and production environments with secure VPC design, remote state management, and CloudWatch monitoring.
-
-🔥 Key Features
-
-Multi-environment architecture (dev / staging / prod)
-
-Secure VPC with public & private subnets
-
-Remote Terraform state (S3 + DynamoDB locking)
-
-Modular, reusable Terraform design
-
-CloudWatch monitoring & alerting
-
-High availability across multiple Availability Zones
-
-Security-first architecture design
-
-🎯 What This Project Demonstrates
-
-Designing secure AWS network architectures
-
-Building reusable Terraform modules
-
-Managing infrastructure across multiple environments
-
-Implementing remote state and team-safe workflows
-
-Monitoring systems using CloudWatch
-
-🏗️ Architecture Diagram
-
-![Architecture](doc/architecture.png)
+**Terraform + CI/CD + DevSecOps + Observability**
 
 ---
 
-📌 Project Overview
+## 📌 Overview
 
-This project demonstrates how to build a secure, scalable, production-ready AWS networking foundation using Infrastructure as Code (Terraform).
+This project demonstrates a **production-style cloud platform** designed to deploy and operate containerized applications securely and at scale on AWS.
 
-Each environment is fully isolated and includes:
+It simulates a real-world environment where:
 
-Dedicated VPC
+* Infrastructure is fully defined using **Terraform (IaC)**
+* Applications are deployed via **automated CI/CD pipelines**
+* Security is enforced using **DevSecOps best practices**
+* Systems are monitored using **observability tooling**
 
-Public and private subnets
+---
 
-Internet Gateway & NAT Gateway
+## 🎯 Why This Project Matters
 
-Route tables and subnet associations
+Modern cloud engineering is not just about deploying apps — it's about:
 
-Remote state management
+* Building **secure and scalable infrastructure**
+* Automating deployments with **CI/CD**
+* Implementing **least privilege access**
+* Ensuring **visibility and reliability in production**
 
-🧠 Architecture Overview
+This project reflects how real companies deploy services in AWS.
 
-Each environment (dev, staging, prod) includes:
+---
 
-Dedicated VPC
+## 🏗️ Architecture Diagram
 
-Public subnets (internet-facing resources)
+![Architecture](docs/architecture.png)
 
-Private subnets (internal workloads)
+---
 
-Internet Gateway
+## 🧠 Architecture Deep Dive
 
-NAT Gateway (cost-optimized)
+### 🌐 Networking
 
-Route tables and subnet associations
+* Custom **VPC** with public and private subnets
+* **Public Subnet** → Application Load Balancer (ALB)
+* **Private Subnet** → ECS Fargate tasks (no direct internet exposure)
 
-Remote state stored in S3 with DynamoDB locking
+### ⚖️ Load Balancing
 
-🗂️ Repository Structure
+* **Application Load Balancer (ALB)**
 
-aws-secure-vpc-terraform/
-├── backend/
-│   └── bootstrap/        # Creates S3 + DynamoDB for remote state
-├── modules/
-│   └── vpc/              # Reusable VPC Terraform module
-├── environments/
-│   ├── dev/
-│   ├── staging/
-│   └── prod/             # Environment-specific configs
-├── docs/
-│   ├── architecture.png
-│   └── screenshots/
-│       └── ops-dashboard.png
-└── README.md
+  * HTTP → HTTPS redirect
+  * TLS termination
+  * Routes traffic to ECS service
 
-🌍 Environments
-EnvironmentCIDR BlockPurpose
-dev	     10.10.0.0/16	 Development & testing
-staging	 10.20.0.0/16	 Pre-production
-prod	   10.30.0.0/16	 Production
+### 🐳 Compute Layer
 
-🔐 Remote State & Locking
+* **ECS Fargate**
 
-Terraform state is stored remotely using:
+  * Serverless container orchestration
+  * Runs Flask app in isolated tasks
+  * Auto-integrated with ALB target group
 
-Amazon S3 — state storage
+### 📦 Container Registry
 
-Amazon DynamoDB — state locking
+* **Amazon ECR**
 
-This prevents:
+  * Stores Docker images
+  * Version-controlled deployments
 
-State corruption
+### 🌍 DNS
 
-Concurrent deployments
+* **Route 53**
 
-Local state drift
+  * Custom domain routing
+  * Points to ALB
 
-⚙️ Deployment
-1️⃣ Bootstrap remote state (one-time)
-cd backend/bootstrap
+---
+
+## ⚙️ Tech Stack
+
+| Category      | Tools                                |
+| ------------- | ------------------------------------ |
+| Cloud         | AWS                                  |
+| IaC           | Terraform                            |
+| Containers    | Docker, ECR                          |
+| Orchestration | ECS Fargate                          |
+| CI/CD         | GitHub Actions, AWS CodePipeline     |
+| Security      | IAM, Security Groups, WAF, GuardDuty |
+| Monitoring    | CloudWatch                           |
+
+---
+
+## 🔄 CI/CD Pipeline (End-to-End)
+
+1. Developer pushes code to GitHub
+2. GitHub Actions:
+
+   * Builds Docker image
+   * Runs checks (optional lint/test)
+3. Image pushed to Amazon ECR
+4. ECS service pulls latest image
+5. New task revision deployed automatically
+
+👉 Result: **Fully automated deployments (zero manual steps)**
+
+---
+
+## 🔐 Security (DevSecOps)
+
+### Identity & Access
+
+* IAM roles with **least privilege access**
+* No hardcoded credentials (AWS best practices)
+
+### Network Security
+
+* Security Groups restrict:
+
+  * ALB → public traffic (443 only)
+  * ECS → only from ALB
+
+### Edge Protection
+
+* HTTPS enforced via ALB
+* (Optional) AWS WAF for Layer 7 protection
+
+### Threat Detection
+
+* (Optional) GuardDuty enabled for anomaly detection
+
+---
+
+## 📊 Observability
+
+* **CloudWatch Logs**
+
+  * Application logs
+  * ECS task logs
+
+* **CloudWatch Metrics**
+
+  * CPU / Memory utilization
+  * ALB request metrics
+
+* **CloudWatch Alarms**
+
+  * High CPU usage
+  * Service health issues
+
+👉 Enables real-time monitoring and alerting
+
+---
+
+## 🚀 Deployment
+
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/Codrich/aws-secure-vpc-terraform.git
+cd aws-secure-vpc-terraform
+```
+
+### 2. Initialize Terraform
+
+```bash
 terraform init
-terraform apply
-2️⃣ Deploy environment (example: dev)
-cd environments/dev
-terraform init
+```
+
+### 3. Deploy Infrastructure
+
+```bash
+terraform apply -var-file=environments/dev/terraform.tfvars
+```
+
+---
+
+## 🧪 Application
+
+Flask app running in ECS Fargate:
+
+```python
+app.run(host="0.0.0.0", port=80)
+```
+
+Accessible via:
+
+* ALB DNS
+* Custom domain (Route 53)
+
+---
+
+## 🧯 Troubleshooting
+
+### ❌ ECS Task Not Starting
+
+* Check CloudWatch Logs
+* Verify IAM permissions
+* Confirm container port mapping
+
+### ❌ ALB Not Routing Traffic
+
+* Check target group health
+* Verify security groups
+* Confirm HTTPS listener
+
+### ❌ Terraform Errors
+
+```bash
+terraform init -reconfigure
+terraform validate
 terraform plan
-terraform apply
-📊 Monitoring (CloudWatch)
+```
 
-The project includes a CloudWatch dashboard with:
+---
 
-ASG CPU utilization
+## 📈 Future Improvements
 
-ALB request count
+* GitOps (ArgoCD / Flux)
+* Multi-environment (dev/stage/prod)
+* Blue/Green deployments
+* Prometheus + Grafana
+* Auto Scaling policies
 
-Target response time
+---
 
-4XX / 5XX error metrics
+## 🧠 Key Learnings
 
-Health checks
+* Designing secure AWS architectures
+* Implementing CI/CD pipelines
+* Observability in distributed systems
+* Infrastructure as Code best practices
 
-Alarm status tracking
+---
 
-### Screenshot
-![Operations Dashboard](docs/screenshots/ops-dashboard.png)
+## ⭐ Author
 
-🧪 Quick Test
+**Rich**
+Cloud / DevSecOps Engineer
 
-After deployment:
-
-terraform output alb_dns_name
-
-Open in browser:
-
-http://<alb_dns_name>
-
-Expected response:
-
-OK: aws-secure-vpc-terraform-dev
-🔐 Security Considerations
-
-No direct SSH access
-
-Private subnets for application workloads
-
-Controlled outbound access via NAT Gateway
-
-Remote state locking for safe deployments
-
-Environment isolation to reduce blast radius
-
-🧠 Design Decisions
-
-Single NAT Gateway per environment (cost optimization)
-
-Modular Terraform design for reuse
-
-Separate environments instead of workspaces (clear isolation)
-
-Remote state implemented from the start
-
-🚀 Roadmap
-
-SSM-only EC2 access (no SSH)
-
-VPC Interface Endpoints (SSM, EC2Messages)
-
-CI/CD pipeline (GitHub Actions)
-
-Terraform validation (fmt, validate)
-
-🛠️ Tech Stack
-
-AWS (VPC, EC2, ALB, S3, DynamoDB, CloudWatch)
-
-Terraform
-
-AWS CLI
-
-👤 Author
-
-Richard Addae
-Cloud & Security Engineering Focus
-Terraform • AWS • Infrastructure as Code
+---
