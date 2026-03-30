@@ -1,6 +1,7 @@
 variable "name_prefix" { type = string }
 variable "asg_name" {
-  type = string
+  type    = string
+  default = null
 }
 
 variable "alb_arn_suffix" {

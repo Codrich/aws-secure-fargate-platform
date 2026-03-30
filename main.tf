@@ -22,7 +22,6 @@ module "observability" {
   name_prefix = local.name_prefix
 
   aws_region              = var.aws_region
-  asg_name                = module.compute.asg_name
   alb_arn_suffix          = module.alb.alb_arn_suffix
   target_group_arn_suffix = module.alb.target_group_arn_suffix
 
