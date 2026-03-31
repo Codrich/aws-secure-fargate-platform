@@ -1,3 +1,4 @@
+<!-- FORCE TEXT CHANGE -->
 # 🚀 Secure AWS ECS Fargate Platform
 
 **Terraform + CI/CD + DevSecOps + Observability**
