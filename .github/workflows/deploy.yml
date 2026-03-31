@@ -16,14 +16,16 @@ jobs:
 terraform-plan:
 if: github.event_name == 'pull_request'
 runs-on: ubuntu-latest
-defaults:
-run:
-working-directory: environments/dev
-steps:
-- name: Checkout code
-uses: actions/checkout@v4
 
 ```
+defaults:
+  run:
+    working-directory: environments/dev
+
+steps:
+  - name: Checkout code
+    uses: actions/checkout@v4
+
   - name: Configure AWS credentials
     uses: aws-actions/configure-aws-credentials@v4
     with:
@@ -46,14 +48,16 @@ uses: actions/checkout@v4
 terraform-apply:
 if: github.ref == 'refs/heads/main'
 runs-on: ubuntu-latest
-defaults:
-run:
-working-directory: environments/dev
-steps:
-- name: Checkout code
-uses: actions/checkout@v4
 
 ```
+defaults:
+  run:
+    working-directory: environments/dev
+
+steps:
+  - name: Checkout code
+    uses: actions/checkout@v4
+
   - name: Configure AWS credentials
     uses: aws-actions/configure-aws-credentials@v4
     with:
