@@ -1,74 +1,166 @@
-name: Terraform CI/CD
+name: Terraform CI/CD + DevSecOps
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [main]
   push:
-    branches:
-      - main
+    branches: [main]
 
 permissions:
-  id-token: write
   contents: read
 
-jobs:
-  terraform-plan:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+concurrency:
+  group: terraform-dev-${{ github.ref }}
+  cancel-in-progress: false
 
+env:
+  AWS_REGION: us-east-1
+  TF_VERSION: 1.14.3
+  TF_WORKING_DIR: environments/dev
+
+jobs:
+  terraform-quality:
+    name: Terraform Quality Checks
+    runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: environments/dev
+        working-directory: ${{ env.TF_WORKING_DIR }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::376129869231:role/github-actions-oidc-role
-          aws-region: us-east-1
+        uses: actions/checkout@v5
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Terraform Init
-        run: terraform init -reconfigure
+      - name: Terraform fmt check
+        run: terraform fmt -check -recursive
 
-      - name: Terraform Validate
+      - name: Terraform init (no backend)
+        run: terraform init -backend=false
+
+      - name: Terraform validate
         run: terraform validate
 
-      - name: Terraform Plan
-        run: terraform plan -var-file=terraform.tfvars
+  checkov:
+    name: Checkov IaC Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: environments/dev
+          framework: terraform
+          quiet: true
+          soft_fail: false
+          output_format: cli,sarif
+          output_file_path: console,results.sarif
+
+      - name: Upload Checkov SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+
+  tfsec:
+  name: tfsec IaC Security Scan
+  runs-on: ubuntu-latest
+  permissions:
+    contents: read
+    security-events: write
+
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Run tfsec
+      uses: aquasecurity/tfsec-action@v1.0.0
+      with:
+        working_directory: environments/dev
+        format: sarif
+        additional_args: --out tfsec.sarif --soft-fail=false
+        github_token: ${{ github.token }}
+
+    - name: Upload tfsec SARIF
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: tfsec.sarif
+
+  terraform-plan:
+    name: Terraform Plan
+    if: github.event_name == 'pull_request'
+    needs: [terraform-quality, checkov, tfsec]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+
+    defaults:
+      run:
+        working-directory: ${{ env.TF_WORKING_DIR }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.0.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform init
+        run: terraform init -reconfigure
+
+      - name: Terraform plan
+        run: terraform plan -var-file="terraform.tfvars" -no-color -out=tfplan
 
   terraform-apply:
-    if: github.ref == 'refs/heads/main'
+    name: Terraform Apply
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [terraform-quality, checkov, tfsec]
     runs-on: ubuntu-latest
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
 
     defaults:
       run:
-        working-directory: environments/dev
+        working-directory: ${{ env.TF_WORKING_DIR }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::376129869231:role/github-actions-oidc-role
-          aws-region: us-east-1
+        uses: actions/checkout@v5
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Terraform Init
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.0.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform init
         run: terraform init -reconfigure
 
-      - name: Terraform Validate
-        run: terraform validate
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve -var-file=terraform.tfvars
+      - name: Terraform apply
+        run: terraform apply -auto-approve -var-file="terraform.tfvars"
