@@ -23,3 +23,14 @@ variable "dev_domain_name" {
   type        = string
   description = "DNS name for the dev ALB, e.g. dev.mertmart.com"
 }
+
+# ADD THESE
+variable "certificate_arn" {
+  description = "ACM certificate ARN for HTTPS listener"
+  type        = string
+}
+
+variable "log_bucket_name" {
+  description = "S3 bucket for ALB access logs"
+  type        = string
+}
