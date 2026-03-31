@@ -1,21 +1,27 @@
-name: Deploy Terraform to AWS
+name: Terraform CI/CD
 
 on:
+  pull_request:
+    branches:
+      - main
+
   push:
     branches:
       - main
 
 permissions:
-  id-token: write   # REQUIRED for OIDC
+  id-token: write
   contents: read
 
 jobs:
-  terraform:
+
+  terraform-plan:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     defaults:
       run:
-        working-directory: environments/dev   # 🔥 SET ONCE (cleaner)
+        working-directory: environments/dev
 
     steps:
       - name: Checkout code
@@ -33,14 +39,36 @@ jobs:
       - name: Terraform Init
         run: terraform init -reconfigure
 
-      - name: Terraform Format
-        run: terraform fmt -recursive
-
       - name: Terraform Validate
         run: terraform validate
 
       - name: Terraform Plan
         run: terraform plan -var-file=terraform.tfvars
+
+
+  terraform-apply:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: environments/dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::376129869231:role/github-actions-oidc-role
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init -reconfigure
 
       - name: Terraform Apply
         run: terraform apply -auto-approve -var-file=terraform.tfvars
