@@ -18,3 +18,14 @@ module "vpc" {
     ManagedBy   = "Terraform"
   }
 }
+
+module "alb" {
+  source = "../../modules/alb"
+
+  name_prefix       = "dev"
+  public_subnet_ids = module.vpc.public_subnet_ids
+
+  alb_sg_id = aws_security_group.alb.id
+
+  certificate_arn = var.certificate_arn  # if you already have this variable
+}
