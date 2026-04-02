@@ -1,249 +1,98 @@
-<!-- FORCE TEXT CHANGE -->
-# 🚀 Secure AWS ECS Fargate Platform
+# Secure AWS ECS Fargate Platform (Terraform + CI/CD + DevSecOps)
+🔗 Cloud-Native | DevSecOps | Infrastructure as Code
 
-**Terraform + CI/CD + DevSecOps + Observability**
+[![AWS](https://img.shields.io/badge/AWS-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white)](https://aws.amazon.com)
+[![Terraform](https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white)](https://www.terraform.io)
+[![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/features/actions)
+
+**Production-grade secure cloud-native platform** on AWS using **Terraform IaC**, **ECS Fargate**, and **DevSecOps practices**.
 
 ---
 
 ## 📌 Overview
 
-This project demonstrates a **production-style cloud platform** designed to deploy and operate containerized applications securely and at scale on AWS.
+This project implements a production-grade cloud-native platform for deploying a containerized Flask application. It combines a secure multi-AZ VPC foundation with ECS Fargate compute, ALB with WAF protection, GitHub Actions CI/CD (OIDC), and comprehensive observability — all managed as code with Terraform.
 
-It simulates a real-world environment where:
-
-* Infrastructure is fully defined using **Terraform (IaC)**
-* Applications are deployed via **automated CI/CD pipelines**
-* Security is enforced using **DevSecOps best practices**
-* Systems are monitored using **observability tooling**
+Built with a strong **security-first mindset**, following AWS Well-Architected Framework principles.
 
 ---
 
-## 🎯 Why This Project Matters
+## 🔑 Key Features
 
-Modern cloud engineering is not just about deploying apps — it's about:
-
-* Building **secure and scalable infrastructure**
-* Automating deployments with **CI/CD**
-* Implementing **least privilege access**
-* Ensuring **visibility and reliability in production**
-
-This project reflects how real companies deploy services in AWS.
+- **Secure multi-AZ VPC** with public/private subnets, NAT Gateway, and remote state (S3 + DynamoDB locking)
+- **Application Load Balancer (ALB)** with HTTPS (ACM) and **WAF** integration
+- **Containerized Python Flask app** running on **Amazon ECS Fargate**
+- **CI/CD Pipeline** using GitHub Actions + OIDC (no static credentials)
+- **DevSecOps hardening**: least-privilege IAM roles, security groups, WAF, and GuardDuty-ready setup
+- **Observability**: CloudWatch logs, metrics, alarms, and dashboards
 
 ---
 
-## 🏗️ Architecture Diagram
+## 🏗️ Architecture
 
-![Architecture](docs/architecture.png)
+![Architecture Diagram](docs/screenshots/architecture.png)
 
----
+<p align="center"><strong>High-level architecture of the Secure AWS ECS Fargate Platform</strong></p>
 
-## 🧠 Architecture Deep Dive
-
-### 🌐 Networking
-
-* Custom **VPC** with public and private subnets
-* **Public Subnet** → Application Load Balancer (ALB)
-* **Private Subnet** → ECS Fargate tasks (no direct internet exposure)
-
-### ⚖️ Load Balancing
-
-* **Application Load Balancer (ALB)**
-
-  * HTTP → HTTPS redirect
-  * TLS termination
-  * Routes traffic to ECS service
-
-### 🐳 Compute Layer
-
-* **ECS Fargate**
-
-  * Serverless container orchestration
-  * Runs Flask app in isolated tasks
-  * Auto-integrated with ALB target group
-
-### 📦 Container Registry
-
-* **Amazon ECR**
-
-  * Stores Docker images
-  * Version-controlled deployments
-
-### 🌍 DNS
-
-* **Route 53**
-
-  * Custom domain routing
-  * Points to ALB
+### 🔍 Key Design Decisions
+- Private subnets for ECS tasks and database to minimize attack surface
+- ALB as the single secure entry point with HTTPS termination
+- OIDC-based authentication for CI/CD to eliminate long-lived credentials
+- Modular Terraform structure for reusability across environments (dev/staging/prod)
+- Defense-in-depth using network segmentation, IAM, WAF, and KMS
 
 ---
 
-## ⚙️ Tech Stack
+## ⚙️ CI/CD Pipeline (GitHub Actions + OIDC)
 
-| Category      | Tools                                |
-| ------------- | ------------------------------------ |
-| Cloud         | AWS                                  |
-| IaC           | Terraform                            |
-| Containers    | Docker, ECR                          |
-| Orchestration | ECS Fargate                          |
-| CI/CD         | GitHub Actions, AWS CodePipeline     |
-| Security      | IAM, Security Groups, WAF, GuardDuty |
-| Monitoring    | CloudWatch                           |
+**Pipeline Flow:**
+1. Code pushed to GitHub → Workflow triggers
+2. OIDC authenticates securely to AWS
+3. Terraform `plan` / `apply`
+4. Docker image built and pushed to Amazon ECR
+5. ECS service updated with new task definition
 
----
-
-## 🔄 CI/CD Pipeline (End-to-End)
-
-1. Developer pushes code to GitHub
-2. GitHub Actions:
-
-   * Builds Docker image
-   * Runs checks (optional lint/test)
-3. Image pushed to Amazon ECR
-4. ECS service pulls latest image
-5. New task revision deployed automatically
-
-👉 Result: **Fully automated deployments (zero manual steps)**
+**Why OIDC?**  
+Eliminates hardcoded credentials and follows enterprise security best practices.
 
 ---
 
-## 🔐 Security (DevSecOps)
+## 🔒 Security & DevSecOps
 
-### Identity & Access
-
-* IAM roles with **least privilege access**
-* No hardcoded credentials (AWS best practices)
-
-### Network Security
-
-* Security Groups restrict:
-
-  * ALB → public traffic (443 only)
-  * ECS → only from ALB
-
-### Edge Protection
-
-* HTTPS enforced via ALB
-* (Optional) AWS WAF for Layer 7 protection
-
-### Threat Detection
-
-* (Optional) GuardDuty enabled for anomaly detection
+- **Implemented**: Least-privilege IAM roles, restrictive Security Groups, HTTPS enforcement, private subnets, WAF on ALB, private ECR
+- **Ready for**: GuardDuty, VPC Flow Logs, infrastructure scanning (Checkov/tfsec)
 
 ---
 
 ## 📊 Observability
 
-* **CloudWatch Logs**
-
-  * Application logs
-  * ECS task logs
-
-* **CloudWatch Metrics**
-
-  * CPU / Memory utilization
-  * ALB request metrics
-
-* **CloudWatch Alarms**
-
-  * High CPU usage
-  * Service health issues
-
-👉 Enables real-time monitoring and alerting
+- CloudWatch Logs for ECS tasks and VPC Flow Logs
+- CloudWatch Metrics (CPU, memory, ALB requests)
+- CloudWatch Alarms for high CPU and 5xx errors
 
 ---
 
-## 🚀 Deployment
-
-### 1. Clone Repository
+## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/Codrich/aws-secure-vpc-terraform.git
-cd aws-secure-vpc-terraform
-```
+git clone https://github.com/Codrich/aws-secure-fargate-platform.git
+cd aws-secure-fargate-platform
 
-### 2. Initialize Terraform
 
-```bash
 terraform init
+terraform plan -var-file="environments/dev/terraform.tfvars"
+terraform apply -var-file="environments/dev/terraform.tfvars"
+
 ```
+## 📌 Key Takeaways
 
-### 3. Deploy Infrastructure
-
-```bash
-terraform apply -var-file=environments/dev/terraform.tfvars
-```
-
----
-
-## 🧪 Application
-
-Flask app running in ECS Fargate:
-
-```python
-app.run(host="0.0.0.0", port=80)
-```
-
-Accessible via:
-
-* ALB DNS
-* Custom domain (Route 53)
+- Built a production-style cloud-native platform using AWS and Terraform  
+- Implemented secure CI/CD using GitHub Actions with OIDC (no static credentials)  
+- Applied DevSecOps principles with IAM least privilege, WAF, and network isolation  
+- Designed for scalability, security, and observability following AWS best practices  
 
 ---
 
-## 🧯 Troubleshooting
+## 📌 Status
 
-### ❌ ECS Task Not Starting
-
-* Check CloudWatch Logs
-* Verify IAM permissions
-* Confirm container port mapping
-
-### ❌ ALB Not Routing Traffic
-
-* Check target group health
-* Verify security groups
-* Confirm HTTPS listener
-
-### ❌ Terraform Errors
-
-```bash
-terraform init -reconfigure
-terraform validate
-terraform plan
-```
-
----
-
-## 📈 Future Improvements
-
-* GitOps (ArgoCD / Flux)
-* Multi-environment (dev/stage/prod)
-* Blue/Green deployments
-* Prometheus + Grafana
-* Auto Scaling policies
-
----
-
-## 🧠 Key Learnings
-
-* Designing secure AWS architectures
-* Implementing CI/CD pipelines
-* Observability in distributed systems
-* Infrastructure as Code best practices
-
----
-
-<!-- test apply pipeline -->
-
----
-
-# trigger pipeline
-
----
-
-## ⭐ Author
-
-**Rich**
-Cloud / DevSecOps Engineer
-
----
+🚧 In active development — CI/CD functional, WAF integrated, and continuous improvements ongoing.
