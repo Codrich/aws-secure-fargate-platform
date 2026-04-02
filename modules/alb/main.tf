@@ -1,9 +1,9 @@
 resource "aws_lb" "this" {
   name               = "${var.name_prefix}-alb"
   load_balancer_type = "application"
-  internal           = false
-  security_groups    = [var.alb_sg_id]
   subnets            = var.public_subnet_ids
+
+  security_groups = [var.alb_sg_id]
 }
 
 resource "aws_lb_target_group" "app" {
@@ -48,7 +48,8 @@ resource "aws_lb_listener" "https" {
   port              = 443
   protocol          = "HTTPS"
 
-  ssl_policy      = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  ssl_policy = "ELBSecurityPolicy-TLS13-1-2-2021-06"  # ✅ FIX
+
   certificate_arn = var.certificate_arn
 
   default_action {
