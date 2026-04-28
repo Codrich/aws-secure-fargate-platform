@@ -9,3 +9,8 @@ output "log_group_name" {
 output "alb_url" {
   value = "http://${data.terraform_remote_state.platform.outputs.alb_dns_name}"
 }
+
+output "app_secret_arn" {
+  description = "ARN of the Secrets Manager secret"
+  value       = aws_secretsmanager_secret.app.arn
+}

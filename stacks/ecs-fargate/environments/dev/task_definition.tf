@@ -20,7 +20,16 @@ resource "aws_ecs_task_definition" "app" {
           protocol      = "tcp"
         }
       ]
-
+      secrets = [
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = "${aws_secretsmanager_secret.app.arn}:DB_PASSWORD::"
+        },
+        {
+          name      = "API_KEY"
+          valueFrom = "${aws_secretsmanager_secret.app.arn}:API_KEY::"
+        }
+      ]
       logConfiguration = {
         logDriver = "awslogs"
         options = {
