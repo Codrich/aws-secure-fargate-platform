@@ -10,13 +10,12 @@ output "private_subnet_ids" {
   value = module.vpc.private_subnet_ids
 }
 
-# ALB outputs (new)
 output "alb_dns_name" {
-  value = aws_lb.app.dns_name
+  value = module.alb.alb_dns_name
 }
 
 output "alb_https_listener_arn" {
-  value = aws_lb_listener.https.arn
+  value = module.alb.alb_arn_suffix
 }
 
 output "alb_security_group_id" {
@@ -24,7 +23,5 @@ output "alb_security_group_id" {
 }
 
 output "alb_target_group_arn" {
-  value = aws_lb_target_group.ecs.arn
+  value = module.alb.target_group_arn
 }
-
-
